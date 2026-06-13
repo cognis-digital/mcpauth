@@ -12,7 +12,6 @@ from typing import Any, Dict
 
 from mcpauth.core import (
     TOOL_NAME,
-    TOOL_VERSION,
     TokenStore,
     decide,
     run_demo,
