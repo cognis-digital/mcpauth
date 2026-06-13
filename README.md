@@ -12,6 +12,44 @@
 
 *AI Security & Governance — securing LLMs, agents, and the MCP supply chain.*
 
+## Usage — step by step
+
+`mcpauth` is a drop-in bearer-token reverse proxy that puts authentication in front of an otherwise unauthenticated MCP server. Tokens are stored hashed in a JSON store (`tokens.json` by default).
+
+1. **Install:**
+
+   ```bash
+   pip install cognis-mcpauth      # or: pip install -e .
+   mcpauth --version
+   ```
+
+2. **Generate a token** (printed once; only its hash is stored). Use `--label` to name it and `--format json` for scripting:
+
+   ```bash
+   mcpauth gen-token --label ci-runner --tokens tokens.json --format json
+   ```
+
+3. **Wrap your upstream MCP server** with the authenticating proxy:
+
+   ```bash
+   mcpauth wrap --upstream http://127.0.0.1:8000 --tokens tokens.json \
+     --host 127.0.0.1 --port 9000 --realm mcpauth
+   ```
+
+4. **Read / verify** — list stored token records, and confirm the 401-without / 200-with behavior with the built-in demo:
+
+   ```bash
+   mcpauth list --tokens tokens.json --format table
+   mcpauth demo --format json
+   ```
+
+5. **Use it in automation** — clients now send `Authorization: Bearer <token>` to the proxy; provision the runner token in CI:
+
+   ```bash
+   TOKEN=$(mcpauth gen-token --label ci --format json | jq -r .token)
+   curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:9000/
+   ```
+
 ## Why
 
 A large share of MCP servers ship with **no authentication** — if you can reach
