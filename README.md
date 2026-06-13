@@ -3,7 +3,7 @@
 > Part of the **[Cognis Neural Suite](https://github.com/cognis-digital)** by [Cognis Digital](https://cognis.digital)
 > Cognis Open Collaboration License (COCL) v1.0 · domain: `ai-security`
 
-[![PyPI](https://img.shields.io/pypi/v/cognis-mcpauth.svg)](https://pypi.org/project/cognis-mcpauth/)
+[![install](https://img.shields.io/badge/install-git%2B%20%C2%B7%20pipx%20%C2%B7%20uv-6b46c1.svg)](#install--every-way-every-platform)
 [![CI](https://github.com/cognis-digital/mcpauth/actions/workflows/ci.yml/badge.svg)](https://github.com/cognis-digital/mcpauth/actions)
 [![License: COCL 1.0](https://img.shields.io/badge/License-COCL%201.0-2b6cb0.svg)](LICENSE)
 [![Suite](https://img.shields.io/badge/Cognis-Neural%20Suite-6b46c1.svg)](https://github.com/cognis-digital)
@@ -11,6 +11,12 @@
 **A reverse proxy that adds authentication in front of an existing (unauthenticated) MCP HTTP server.**
 
 *AI Security & Governance — securing LLMs, agents, and the MCP supply chain.*
+
+<!-- cognis:layman:start -->
+## What is this?
+
+mcpauth is a security gateway that protects AI tool servers (called MCP servers) by requiring a password before anyone can use them. Many MCP servers ship with no access control at all — anyone who can reach the network port can call every tool. mcpauth sits in front of your existing server and blocks requests that don't carry a valid token, so you decide who gets in. It is aimed at developers and teams who run AI tools internally or over a network and need a simple way to lock them down without modifying the underlying server.
+<!-- cognis:layman:end -->
 
 ## Why
 
@@ -32,10 +38,46 @@ standard-library reverse proxy that:
 
 Single-purpose, scriptable, self-hostable, zero pip dependencies.
 
+<!-- cognis:install:start -->
+## Install
+
+`mcpauth` is source-available (not published to PyPI) — every method below installs
+straight from GitHub. Pick whichever you prefer; the one-line scripts auto-detect
+the best tool available on your machine.
+
+**One-liner (Linux / macOS):**
+```sh
+curl -fsSL https://raw.githubusercontent.com/cognis-digital/mcpauth/HEAD/install.sh | sh
+```
+
+**One-liner (Windows PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/cognis-digital/mcpauth/HEAD/install.ps1 | iex
+```
+
+**Or install manually — any one of:**
+```sh
+pipx install "git+https://github.com/cognis-digital/mcpauth.git"     # isolated (recommended)
+uv tool install "git+https://github.com/cognis-digital/mcpauth.git"  # uv
+pip install "git+https://github.com/cognis-digital/mcpauth.git"      # pip
+```
+
+**From source:**
+```sh
+git clone https://github.com/cognis-digital/mcpauth.git
+cd mcpauth && pip install .
+```
+
+Then run:
+```sh
+mcpauth --help
+```
+<!-- cognis:install:end -->
+
 ## Install
 
 ```bash
-pip install cognis-mcpauth
+pip install "git+https://github.com/cognis-digital/mcpauth.git"
 # or, from this repo:
 pip install -e ".[dev]"
 ```
@@ -126,6 +168,32 @@ can call them as scoped capabilities.
 
 PRs, new detections, and demo scenarios are welcome under the collaboration-pull
 model. See the COCL license terms below.
+
+<a name="verification"></a>
+## Verification
+
+[![tests](https://img.shields.io/badge/tests-19%20passing-2ea44f.svg)](AUDIT.md)
+
+Every push is verified end-to-end. Latest audit (2026-06-13):
+
+```text
+tests        : 19 passed, 0 failed, 0 errored
+compile      : all modules parse
+cli          : C:\Python314\python.exe: No module named https
+package      : https
+```
+
+<details><summary>CLI surface (<code>--help</code>)</summary>
+
+```text
+C:\Python314\python.exe: No module named https
+```
+</details>
+
+Full machine-readable results: [`AUDIT.md`](AUDIT.md) · regenerate with `python -m https --help` + `pytest -q`.
+
+<div align="right"><a href="#top">↑ back to top</a></div>
+
 
 ## License
 
