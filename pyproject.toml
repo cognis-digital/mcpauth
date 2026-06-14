@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cognis-mcpauth"
-version = "0.1.0"
+version = "0.1.1"
 description = "Drop-in token-auth gateway in front of unauthenticated MCP servers"
 authors = [{name = "Cognis Digital", email = "suite@cognis.digital"}]
 license = {text = "LicenseRef-COCL-1.0"}
@@ -21,6 +21,7 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
+connect = ["cognis-connect @ git+https://github.com/cognis-digital/cognis-connect.git"]
 mcp = ["mcp>=1.0"]
 dev = ["pytest>=8.0"]
 
@@ -29,6 +30,7 @@ Homepage = "https://cognis.digital"
 Repository = "https://github.com/cognis-digital/mcpauth"
 
 [project.scripts]
+"mcpauth-emit" = "mcpauth.connect:emit_main"
 mcpauth = "mcpauth.cli:main"
 
 [tool.hatch.build.targets.wheel]
