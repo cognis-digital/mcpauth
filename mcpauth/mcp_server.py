@@ -19,8 +19,23 @@ from mcpauth.core import (
 
 
 def verify_capability(token: str, tokens_path: str = "tokens.json") -> Dict[str, Any]:
-    """Verify a presented Bearer token against a token store on disk."""
-    store = TokenStore.load(tokens_path)
+    """Verify a presented Bearer token against a token store on disk.
+
+    Returns a dict with ``allowed``, ``reason``, etc.  On I/O or parse
+    error the store is treated as empty so the token is always rejected —
+    the error detail is surfaced in a top-level ``store_error`` key.
+    """
+    if not isinstance(token, str):
+        token = ""
+    try:
+        store = TokenStore.load(tokens_path)
+    except (OSError, Exception) as exc:  # TokenStoreError is a ValueError subclass
+        # Fail closed: reject the token and report what went wrong.
+        from .core import AuthDecision
+        d = AuthDecision(allowed=False, reason="store_unavailable")
+        result = d.to_dict()
+        result["store_error"] = str(exc)
+        return result
     header = f"Bearer {token}" if token else None
     d = decide(header, store)
     return d.to_dict()

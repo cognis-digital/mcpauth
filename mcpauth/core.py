@@ -42,6 +42,11 @@ _PBKDF2_ROUNDS = 200_000
 _TOKEN_BYTES = 32  # 256-bit token entropy
 _PREFIX = "mcpauth_"  # human-recognizable token prefix
 
+# Safety caps for request body reading and PBKDF2 rounds.
+_MAX_BODY_BYTES = 64 * 1024 * 1024   # 64 MiB — hard cap on forwarded body
+_MIN_ROUNDS = 1
+_MAX_ROUNDS = 10_000_000
+
 # Hop-by-hop headers that must not be forwarded (RFC 7230 §6.1).
 _HOP_BY_HOP = frozenset({
     "connection", "keep-alive", "proxy-authenticate", "proxy-authorization",
@@ -103,6 +108,7 @@ def verify_token(token: str, records: List[TokenRecord]) -> Optional[TokenRecord
     Every record is checked (no early return on first mismatch) so that the
     work performed does not leak which/whether a token matched via timing.
     Returns the matching :class:`TokenRecord`, or ``None``.
+    Silently skips records with malformed salt/hash or out-of-range rounds.
     """
     if not token:
         return None
@@ -112,9 +118,18 @@ def verify_token(token: str, records: List[TokenRecord]) -> Optional[TokenRecord
             salt_bytes = bytes.fromhex(rec.salt)
         except ValueError:
             continue
-        candidate = _hash_token(token, salt_bytes, rec.rounds)
-        # hmac.compare_digest is constant-time for equal-length inputs.
-        if hmac.compare_digest(candidate, rec.hash):
+        if not (_MIN_ROUNDS <= rec.rounds <= _MAX_ROUNDS):
+            continue
+        try:
+            candidate = _hash_token(token, salt_bytes, rec.rounds)
+        except (ValueError, OverflowError):
+            continue
+        stored_hash = rec.hash
+        # hmac.compare_digest requires both arguments to be the same type
+        # and equal length; guard against a malformed stored hash.
+        if not isinstance(stored_hash, str) or len(candidate) != len(stored_hash):
+            continue
+        if hmac.compare_digest(candidate, stored_hash):
             matched = rec
     return matched
 
@@ -148,11 +163,23 @@ class TokenStore:
             if not isinstance(item, dict):
                 raise TokenStoreError("each token record must be an object")
             try:
+                rounds_raw = item.get("rounds", _PBKDF2_ROUNDS)
+                try:
+                    rounds = int(rounds_raw)
+                except (TypeError, ValueError) as exc:
+                    raise TokenStoreError(
+                        f"token record has non-integer rounds: {rounds_raw!r}"
+                    ) from exc
+                if not (_MIN_ROUNDS <= rounds <= _MAX_ROUNDS):
+                    raise TokenStoreError(
+                        f"token record rounds={rounds} is out of range "
+                        f"[{_MIN_ROUNDS}, {_MAX_ROUNDS}]"
+                    )
                 records.append(TokenRecord(
                     id=str(item["id"]),
                     label=str(item.get("label", "unnamed")),
                     algorithm=str(item.get("algorithm", "pbkdf2_sha256")),
-                    rounds=int(item.get("rounds", _PBKDF2_ROUNDS)),
+                    rounds=rounds,
                     salt=str(item["salt"]),
                     hash=str(item["hash"]),
                     created_at=str(item.get("created_at", "")),
@@ -279,6 +306,8 @@ class ProxyConfig:
 
 def _normalize_upstream(upstream: str) -> str:
     u = upstream.strip()
+    if not u:
+        raise ValueError("upstream URL must not be empty")
     if not u.startswith(("http://", "https://")):
         u = "http://" + u
     return u.rstrip("/")
@@ -348,6 +377,11 @@ def _make_handler(config: ProxyConfig, store: TokenStore):
                     n = int(length)
                 except ValueError:
                     return b""
+                if n < 0:
+                    return b""
+                # Cap to avoid memory exhaustion from a malicious
+                # Content-Length header.
+                n = min(n, _MAX_BODY_BYTES)
                 return self.rfile.read(n) if n > 0 else b""
             return b""
 

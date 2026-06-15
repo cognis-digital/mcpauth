@@ -133,6 +133,14 @@ def _cmd_gen_token(args: argparse.Namespace) -> int:
 
 
 def _cmd_wrap(args: argparse.Namespace) -> int:
+    if not (0 <= args.port <= 65535):
+        print(f"error: --port {args.port} is out of range [0, 65535]",
+              file=sys.stderr)
+        return 2
+    if args.timeout <= 0:
+        print(f"error: --timeout must be positive, got {args.timeout}",
+              file=sys.stderr)
+        return 2
     try:
         store = TokenStore.load(args.tokens)
     except (OSError, TokenStoreError) as exc:
