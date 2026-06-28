@@ -12,6 +12,63 @@
 
 *AI Security & Governance — securing LLMs, agents, and the MCP supply chain.*
 
+
+<!-- cognis:example:start -->
+## 🔎 Example output
+
+Real, reproducible output from the tool — runs offline:
+
+```console
+$ mcpauth-emit --version
+mcpauth 0.1.0
+```
+
+```console
+$ mcpauth-emit --help
+usage: mcpauth [-h] [--version] {gen-token,wrap,list,demo} ...
+
+Drop-in token-auth gateway in front of unauthenticated MCP servers - a reverse
+proxy that requires a valid Bearer token before forwarding to the upstream.
+
+positional arguments:
+  {gen-token,wrap,list,demo}
+    gen-token           Generate + store a hashed API token.
+    wrap                Run the authenticating reverse proxy.
+    list                List stored token records.
+    demo                Run the built-in 401-without / 200-with token demo.
+
+options:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+```
+
+```console
+$ mcpauth-emit demo
+mcpauth: demo - auth gateway in front of a fake MCP upstream
+============================================================
+  upstream         : http://127.0.0.1:54983
+  proxy            : http://127.0.0.1:54984
+  no token   -> 401  (expected 401)
+  valid token-> 200  (expected 200)
+------------------------------------------------------------
+  audit log:
+    {"ts":"2026-06-28T13:01:00.191707+00:00","client":"127.0.0.1","method":"GET","path":"/mcp","allowed":false,"reason":"missing_header","status":401,"token_id":"","label":""}
+    {"ts":"2026-06-28T13:01:00.363406+00:00","client":"127.0.0.1","method":"GET","path":"/mcp","allowed":true,"reason":"ok","status":200,"token_id":"4d6d3bc763ed604f","label":"demo-key"}
+------------------------------------------------------------
+RESULT: PASS
+```
+
+```console
+$ mcpauth-emit list
+mcpauth: stored tokens (0)
+============================================================
+No tokens stored. Run `mcpauth gen-token` to create one.
+```
+
+> Blocks above are real `mcpauth` output — reproduce them from a clone.
+
+<!-- cognis:example:end -->
+
 ## Usage — step by step
 
 `mcpauth` is a drop-in bearer-token reverse proxy that puts authentication in front of an otherwise unauthenticated MCP server. Tokens are stored hashed in a JSON store (`tokens.json` by default).

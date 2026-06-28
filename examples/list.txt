@@ -1,0 +1,5 @@
+$ mcpauth-emit list
+
+mcpauth: stored tokens (0)
+============================================================
+No tokens stored. Run `mcpauth gen-token` to create one.

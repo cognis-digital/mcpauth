@@ -1,0 +1,17 @@
+$ mcpauth-emit --help
+
+usage: mcpauth [-h] [--version] {gen-token,wrap,list,demo} ...
+
+Drop-in token-auth gateway in front of unauthenticated MCP servers - a reverse
+proxy that requires a valid Bearer token before forwarding to the upstream.
+
+positional arguments:
+  {gen-token,wrap,list,demo}
+    gen-token           Generate + store a hashed API token.
+    wrap                Run the authenticating reverse proxy.
+    list                List stored token records.
+    demo                Run the built-in 401-without / 200-with token demo.
+
+options:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit

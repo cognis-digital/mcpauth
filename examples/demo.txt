@@ -1,0 +1,14 @@
+$ mcpauth-emit demo
+
+mcpauth: demo - auth gateway in front of a fake MCP upstream
+============================================================
+  upstream         : http://127.0.0.1:54983
+  proxy            : http://127.0.0.1:54984
+  no token   -> 401  (expected 401)
+  valid token-> 200  (expected 200)
+------------------------------------------------------------
+  audit log:
+    {"ts":"2026-06-28T13:01:00.191707+00:00","client":"127.0.0.1","method":"GET","path":"/mcp","allowed":false,"reason":"missing_header","status":401,"token_id":"","label":""}
+    {"ts":"2026-06-28T13:01:00.363406+00:00","client":"127.0.0.1","method":"GET","path":"/mcp","allowed":true,"reason":"ok","status":200,"token_id":"4d6d3bc763ed604f","label":"demo-key"}
+------------------------------------------------------------
+RESULT: PASS

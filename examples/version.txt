@@ -1,0 +1,3 @@
+$ mcpauth-emit --version
+
+mcpauth 0.1.0
